@@ -1,6 +1,7 @@
 import os
 import time
 from dataloader import DataLoader
+from transforms import normalize_image
 
 if __name__ == '__main__':
     dirname = os.path.dirname(__file__)
@@ -22,8 +23,8 @@ if __name__ == '__main__':
     ))
 
     start_time = time.time()
-    image_norm_batch = loader.load_images(soln[1000:2000, 0].astype(int), normalize=True)
-    print('Batch load and normalize 1000 images time {:.2f}s'.format(time.time() - start_time))
+    image_norm_batch = normalize_image(image_batch)
+    print('Normalization took {:.2f}s'.format(time.time() - start_time))
 
     print('1000 images (normalized) memory footprint {:.1f}MB'.format(
         (image_norm_batch.size * image_norm_batch.itemsize) / 1e6

@@ -13,8 +13,7 @@ class DataLoader:
     def load_images(
             self,
             galaxy_ids: Union[np.ndarray, List[int]],
-            rotations: Union[None, int, np.ndarray, List[int]] = None,
-            normalize: bool = False
+            rotations: Union[None, int, np.ndarray, List[int]] = None
     ):
         """
         Batch load galaxy images, each with the given rotation
@@ -39,9 +38,6 @@ class DataLoader:
             if rotations is not None:
                 image = image.rotate(rotations[i])
             output[i] = np.array(image, dtype=np.byte).transpose((2, 0, 1))
-
-        if normalize:
-            output = output.astype(np.float) / 255.0
 
         return output
 
