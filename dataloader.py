@@ -10,13 +10,18 @@ class DataLoader:
         self.soln_path = soln_path
         self.soln = None
 
-    def load_images(self, galaxy_ids: Union[np.ndarray, List[int]],
-                    rotations: Union[None, int, np.ndarray, List[int]] = None):
+    def load_images(
+            self,
+            galaxy_ids: Union[np.ndarray, List[int]],
+            rotations: Union[None, int, np.ndarray, List[int]] = None,
+            normalize: bool = False
+    ):
         """
         Batch load galaxy images, each with the given rotation
 
         :param galaxy_ids: The ID of the galaxies to load
         :param rotations: The rotation, in degrees counterclockwise, to apply to each image
+        :param normalize: If true, the input image is normalized to the [0..1] range
         :return: numpy array of data type byte and shape N x C x W x H, where N is the number of data points
         """
 
@@ -34,6 +39,9 @@ class DataLoader:
             if rotations is not None:
                 image = image.rotate(rotations[i])
             output[i] = np.array(image, dtype=np.byte).transpose((2, 0, 1))
+
+        if normalize:
+            output = output.astype(np.float) / 255.0
 
         return output
 
