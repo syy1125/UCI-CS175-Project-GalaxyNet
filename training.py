@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from dataloader import DataLoader
-from transforms import preprocess
+from .dataloader import DataLoader
+from .transforms import preprocess
 
 
 # Based on the train function provided by pytorch sample code, but with some extra functionalities
