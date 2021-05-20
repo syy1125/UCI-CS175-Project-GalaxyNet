@@ -1,7 +1,7 @@
 import os
 import time
 from dataloader import DataLoader
-from transforms import normalize_image
+from transforms import normalize_images
 
 if __name__ == '__main__':
     dirname = os.path.dirname(__file__)
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     ))
 
     start_time = time.time()
-    image_norm_batch = normalize_image(image_batch)
+    image_norm_batch = normalize_images(image_batch)
     print('Normalization took {:.2f}s'.format(time.time() - start_time))
 
     print('1000 images (normalized) memory footprint {:.1f}MB'.format(

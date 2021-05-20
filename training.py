@@ -1,15 +1,15 @@
+from typing import Callable
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
 from .dataloader import DataLoader
-from .transforms import preprocess
 
 
 # Based on the train function provided by pytorch sample code, but with some extra functionalities
 def train(
-        training_data: np.ndarray, loader: DataLoader,
+        training_data: np.ndarray, loader: DataLoader, preprocess_fn: Callable,
         model: nn.Module, loss_fn, optimizer,
         num_epochs: int, batch_size=50, lr_scheduler=None, dtype=torch.FloatTensor
 ):
@@ -18,6 +18,7 @@ def train(
 
     :param training_data: The training data, in a similar shape to what the dataloader would load for solutions
     :param loader: The dataloader to use for loading images
+    :param preprocess_fn: The preprocessor function for images, or None if no preprocessing is to be done
     :param model: The model to train
     :param loss_fn: Loss function used in training
     :param optimizer: Optimizer used in training
@@ -45,9 +46,10 @@ def train(
                 rng.integers(0, 360, batch_data.shape[0])
             )
 
-            x = preprocess(images)
+            if preprocess_fn is not None:
+                images = preprocess_fn(images)
 
-            x_var = Variable(torch.from_numpy(x).type(dtype))
+            x_var = Variable(torch.from_numpy(images).type(dtype))
             y_var = Variable(torch.from_numpy(batch_data[:, 1:]).type(dtype))
 
             scores = model(x_var)
