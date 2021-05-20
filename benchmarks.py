@@ -1,7 +1,7 @@
 import os
 import time
 from dataloader import DataLoader
-from transforms import normalize_images
+from transforms import normalize_images, combine, color_index
 
 if __name__ == '__main__':
     dirname = os.path.dirname(__file__)
@@ -23,9 +23,10 @@ if __name__ == '__main__':
     ))
 
     start_time = time.time()
-    image_norm_batch = normalize_images(image_batch)
-    print('Normalization took {:.2f}s'.format(time.time() - start_time))
+    preprocessor = combine(normalize_images, color_index)
+    image_norm_batch = preprocessor(image_batch)
+    print('Preprocessing took {:.2f}s'.format(time.time() - start_time))
 
-    print('1000 images (normalized) memory footprint {:.1f}MB'.format(
+    print('1000 images (preprocessed) memory footprint {:.1f}MB'.format(
         (image_norm_batch.size * image_norm_batch.itemsize) / 1e6
     ))

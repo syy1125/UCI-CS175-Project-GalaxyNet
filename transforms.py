@@ -8,7 +8,7 @@ def normalize_images(data: np.ndarray):
 # Kinda replicates the idea of a "B-R" color index typically used in astronomy
 def color_index(data: np.ndarray):
     data = np.maximum(data, 1)  # Prevent log(0) singularity
-    return (np.log(data[:, 2]) - np.log(data[:, 0])) / np.log(255)
+    return (np.log(data[:, (2,)]) - np.log(data[:, (0,)])) / np.log(255)
 
 
 def compose(*transforms):
