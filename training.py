@@ -24,6 +24,7 @@ def train(
     :param num_epochs: Number of epochs to train the model for
     :param batch_size: Number of images in a training batch
     :param lr_scheduler: If set, step this scheduler at the end of every epoch
+    :param dtype: Data type
     :return:
     """
     rng = np.random.default_rng()
