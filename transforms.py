@@ -28,4 +28,4 @@ def combine(*transforms):
     """
     Combine the preprocessors by stacking their output on axis 1.
     """
-    return lambda data: np.stack([transform_fn(data) for transform_fn in transforms], axis=1)
+    return lambda data: np.concatenate([transform_fn(data) for transform_fn in transforms], axis=1)
