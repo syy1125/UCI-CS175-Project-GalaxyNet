@@ -11,7 +11,7 @@ from .transforms import preprocess
 def train(
         training_data: np.ndarray, loader: DataLoader,
         model: nn.Module, loss_fn, optimizer,
-        num_epochs: int, batch_size=50, lr_scheduler=None
+        num_epochs: int, batch_size=50, lr_scheduler=None, dtype=torch.FloatTensor
 ):
     """
     Trains the model using the given parameters.
@@ -46,8 +46,8 @@ def train(
 
             x = preprocess(images)
 
-            x_var = Variable(torch.from_numpy(x))
-            y_var = Variable(torch.from_numpy(batch_data[:, 1:]))
+            x_var = Variable(torch.from_numpy(x).type(dtype))
+            y_var = Variable(torch.from_numpy(batch_data[:, 1:]).type(dtype))
 
             scores = model(x_var)
             loss = loss_fn(scores, y_var)
