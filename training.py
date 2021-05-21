@@ -1,6 +1,6 @@
 import time
-import multiprocessing
-from typing import Callable
+from concurrent.futures import ThreadPoolExecutor, Future
+from typing import Callable, Union
 import numpy as np
 import torch
 import torch.nn as nn
@@ -31,55 +31,72 @@ def train(
     :return:
     """
     rng = np.random.default_rng()
+    iter_per_epoch = training_data.shape[0] // batch_size
     loss_record = []
 
     load_time = 0
     train_time = 0
 
-    for epoch in range(num_epochs):
-        print('Starting epoch {}/{}'.format(epoch + 1, num_epochs))
-        model.train()
+    def load_batch():
+        batch_indices = rng.choice(training_data.shape[0], batch_size)
+        batch_data = training_data[batch_indices]
+        images = loader.load_images(
+            batch_data[:, 0].astype(np.int),
+            rng.integers(0, 360, batch_data.shape[0])
+        )
 
-        epoch_loss = []
+        if preprocess_fn is not None:
+            images = preprocess_fn(images)
 
-        for i in range(training_data.shape[0] // batch_size):
-            load_start_time = time.time()
+        return Variable(torch.from_numpy(images).type(dtype)), Variable(torch.from_numpy(batch_data[:, 1:]).type(dtype))
 
-            batch_indices = rng.choice(training_data.shape[0], batch_size)
-            batch_data = training_data[batch_indices]
+    def timed_load_batch():
+        start_time = time.time()
+        x, y = load_batch()
+        end_time = time.time()
+        return x, y, end_time - start_time
 
-            images = loader.load_images(
-                batch_data[:, 0].astype(np.int),
-                rng.integers(0, 360, batch_data.shape[0])
-            )
+    def train_batch(x, y):
+        scores = model(x)
+        loss = loss_fn(scores, y)
 
-            if preprocess_fn is not None:
-                images = preprocess_fn(images)
+        epoch_loss.append(loss.item())
 
-            x_var = Variable(torch.from_numpy(images).type(dtype))
-            y_var = Variable(torch.from_numpy(batch_data[:, 1:]).type(dtype))
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-            load_end_time = time.time()
-            load_time += load_end_time - load_start_time
+    with ThreadPoolExecutor() as executor:
 
-            train_start_time = time.time()
+        for epoch in range(num_epochs):
+            print('Starting epoch {}/{}'.format(epoch + 1, num_epochs))
+            model.train()
 
-            scores = model(x_var)
-            loss = loss_fn(scores, y_var)
+            epoch_loss = []
+            data_preload_task: Union[Future, None] = None
 
-            epoch_loss.append(loss.item())
+            for i in range(iter_per_epoch):
+                if data_preload_task is not None:
+                    x_var, y_var, load_batch_time = data_preload_task.result()
+                else:
+                    x_var, y_var, load_batch_time = timed_load_batch()
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+                load_time += load_batch_time
 
-            train_end_time = time.time()
-            train_time += train_end_time - train_start_time
+                if i < iter_per_epoch - 1:
+                    data_preload_task = executor.submit(timed_load_batch)
 
-        print('Epoch {} mean loss {}'.format(epoch + 1, np.mean(epoch_loss)))
-        loss_record.append(epoch_loss)
+                train_start_time = time.time()
 
-        if lr_scheduler is not None:
-            lr_scheduler.step()
+                train_batch(x_var, y_var)
+
+                train_end_time = time.time()
+                train_time += train_end_time - train_start_time
+
+            print('Epoch {} mean loss {}'.format(epoch + 1, np.mean(epoch_loss)))
+            loss_record.append(epoch_loss)
+
+            if lr_scheduler is not None:
+                lr_scheduler.step()
 
     print('Data loading time {}s, model training time {}s'.format(load_time, train_time))
