@@ -1,3 +1,5 @@
+import time
+import multiprocessing
 from typing import Callable
 import numpy as np
 import torch
@@ -11,7 +13,7 @@ from .dataloader import DataLoader
 def train(
         training_data: np.ndarray, loader: DataLoader, preprocess_fn: Callable,
         model: nn.Module, loss_fn, optimizer,
-        num_epochs: int, batch_size=50, lr_scheduler=None, dtype=torch.FloatTensor
+        num_epochs: int, batch_size=50, lr_scheduler=None, dtype=torch.FloatTensor,
 ):
     """
     Trains the model using the given parameters.
@@ -31,6 +33,9 @@ def train(
     rng = np.random.default_rng()
     loss_record = []
 
+    load_time = 0
+    train_time = 0
+
     for epoch in range(num_epochs):
         print('Starting epoch {}/{}'.format(epoch + 1, num_epochs))
         model.train()
@@ -38,6 +43,8 @@ def train(
         epoch_loss = []
 
         for i in range(training_data.shape[0] // batch_size):
+            load_start_time = time.time()
+
             batch_indices = rng.choice(training_data.shape[0], batch_size)
             batch_data = training_data[batch_indices]
 
@@ -52,6 +59,11 @@ def train(
             x_var = Variable(torch.from_numpy(images).type(dtype))
             y_var = Variable(torch.from_numpy(batch_data[:, 1:]).type(dtype))
 
+            load_end_time = time.time()
+            load_time += load_end_time - load_start_time
+
+            train_start_time = time.time()
+
             scores = model(x_var)
             loss = loss_fn(scores, y_var)
 
@@ -61,8 +73,13 @@ def train(
             loss.backward()
             optimizer.step()
 
+            train_end_time = time.time()
+            train_time += train_end_time - train_start_time
+
         print('Epoch {} mean loss {}'.format(epoch + 1, np.mean(epoch_loss)))
         loss_record.append(epoch_loss)
 
         if lr_scheduler is not None:
             lr_scheduler.step()
+
+    print('Data loading time {}s, model training time {}s'.format(load_time, train_time))
