@@ -20,14 +20,13 @@ class DataLoader:
 
         :param galaxy_ids: The ID of the galaxies to load
         :param rotations: The rotation, in degrees counterclockwise, to apply to each image
-        :param normalize: If true, the input image is normalized to the [0..1] range
         :return: numpy array of data type byte and shape N x C x W x H, where N is the number of data points
         """
 
         n = len(galaxy_ids)
 
         # Images are 424 x 424 RGB
-        output = np.zeros((n, 3, 424, 424), dtype=np.byte)
+        output = np.zeros((n, 3, 424, 424), dtype=np.ubyte)
 
         if rotations is not None and isinstance(rotations, int):
             rotations = np.full(n, rotations)
