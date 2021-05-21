@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 
 
@@ -7,7 +8,7 @@ def normalize_images(data: np.ndarray):
 
 # Kinda replicates the idea of a "B-R" color index typically used in astronomy
 def color_index(data: np.ndarray):
-    data = np.maximum(data, 1)  # Prevent log(0) singularity
+    data = np.maximum(data, 1).astype(np.float)  # Prevent log(0) singularity
     return (np.log(data[:, (2,)]) - np.log(data[:, (0,)])) / np.log(255)
 
 
@@ -28,4 +29,17 @@ def combine(*transforms):
     """
     Combine the preprocessors by stacking their output on axis 1.
     """
-    return lambda data: np.concatenate([transform_fn(data) for transform_fn in transforms], axis=1)
+
+    def result(data: np.ndarray):
+        transformed = []
+
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for transform_fn in transforms:
+                futures.append(executor.submit(transform_fn, data))
+            for future in futures:
+                transformed.append(future.result())
+
+        return np.concatenate(transformed, axis=1)
+
+    return result

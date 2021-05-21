@@ -25,6 +25,7 @@ if __name__ == '__main__':
     start_time = time.time()
     preprocessor = combine(normalize_images, color_index)
     image_norm_batch = preprocessor(image_batch)
+    print(image_norm_batch.shape)
     print('Preprocessing took {:.2f}s'.format(time.time() - start_time))
 
     print('1000 images (preprocessed) memory footprint {:.1f}MB'.format(
