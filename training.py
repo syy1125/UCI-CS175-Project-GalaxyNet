@@ -118,8 +118,8 @@ def batch_predict_eval(
 
     with torch.no_grad():
         for i in range(0, data.shape[0], batch_size):
-            start_index = batch_size * i
-            end_index = np.min(batch_size * (i + 1), data.shape[0])
+            start_index = i
+            end_index = np.minimum(i + batch_size, data.shape[0])
 
             data_batch = data[start_index:end_index]
             images = loader.load_images(data_batch[:, 0].astype(np.int))
