@@ -14,6 +14,7 @@ def train(
         training_data: np.ndarray, loader: DataLoader, preprocess_fn: Callable,
         model: nn.Module, loss_fn, optimizer,
         num_epochs: int, batch_size=50, lr_scheduler=None, dtype=torch.FloatTensor,
+        print_fn: Union[Callable[[str], None], None] = print
 ):
     """
     Trains the model using the given parameters.
@@ -27,7 +28,8 @@ def train(
     :param num_epochs: Number of epochs to train the model for
     :param batch_size: Number of images in a training batch
     :param lr_scheduler: If set, step this scheduler at the end of every epoch
-    :param dtype: Data type
+    :param dtype: pytorch data type to use
+    :param print_fn: Print function for logging statements
     :return:
     """
     rng = np.random.default_rng()
@@ -69,7 +71,8 @@ def train(
     with ThreadPoolExecutor() as executor:
 
         for epoch in range(num_epochs):
-            print('Starting epoch {}/{}'.format(epoch + 1, num_epochs))
+            if print_fn is not None:
+                print_fn('Starting epoch {}/{}'.format(epoch + 1, num_epochs))
             model.train()
 
             epoch_loss = []
@@ -93,10 +96,12 @@ def train(
                 train_end_time = time.time()
                 train_time += train_end_time - train_start_time
 
-            print('Epoch {} mean loss {}'.format(epoch + 1, np.mean(epoch_loss)))
+            if print_fn is not None:
+                print_fn('Epoch {} mean loss {}'.format(epoch + 1, np.mean(epoch_loss)))
             loss_record.append(epoch_loss)
 
             if lr_scheduler is not None:
                 lr_scheduler.step()
 
-    print('Data loading time {}s, model training time {}s'.format(load_time, train_time))
+    if print_fn is not None:
+        print_fn('Data loading time {}s, model training time {}s'.format(load_time, train_time))
