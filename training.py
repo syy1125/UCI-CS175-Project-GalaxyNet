@@ -11,9 +11,9 @@ from .dataloader import DataLoader
 
 # Based on the train function provided by pytorch sample code, but with some extra functionalities
 def train(
-        training_data: np.ndarray, loader: DataLoader, preprocess_fn: Callable,
+        training_data: np.ndarray, loader: DataLoader, preprocess_fn: Callable[[np.ndarray], np.ndarray],
         model: nn.Module, loss_fn, optimizer,
-        num_epochs: int, batch_size=50, lr_scheduler=None, dtype=torch.FloatTensor,
+        num_epochs: int, batch_size: int = 50, lr_scheduler=None, dtype=torch.FloatTensor,
         print_fn: Union[Callable[[str], None], None] = print
 ):
     """
@@ -105,3 +105,29 @@ def train(
 
     if print_fn is not None:
         print_fn('Data loading time {}s, model training time {}s'.format(load_time, train_time))
+
+
+def batch_predict_eval(
+        data: np.ndarray, loader: DataLoader, preprocess_fn: Callable[[np.ndarray], np.ndarray],
+        model: nn.Module, batch_size: int = 50, dtype=torch.FloatTensor,
+        extract_predictions: Callable[[Variable], np.ndarray] = lambda scores: scores.data.numpy()
+):
+    model.eval()
+
+    predictions = np.zeros((data.shape[0], data.shape[1] - 1))
+
+    with torch.no_grad():
+        for i in range(0, data.shape[0], batch_size):
+            start_index = batch_size * i
+            end_index = np.min(batch_size * (i + 1), data.shape[0])
+
+            data_batch = data[start_index:end_index]
+            images = loader.load_images(data_batch[:, 0].astype(np.int))
+            images = preprocess_fn(images)
+
+            x_var = Variable(torch.from_numpy(images).type(dtype))
+
+            scores = model(x_var)
+            predictions[start_index:end_index] = extract_predictions(scores)
+
+    return predictions
