@@ -13,7 +13,7 @@ from .dataloader import DataLoader
 def train(
         training_data: np.ndarray, loader: DataLoader,
         model: nn.Module, loss_fn, optimizer,
-        num_epochs: int, batch_size: int = 50, lr_scheduler=None, dtype=torch.FloatTensor,
+        num_epochs: int, batch_size: int = 50, iter_per_batch: int = 5, lr_scheduler=None, dtype=torch.FloatTensor,
         timing_log: Union[list, None] = None, loss_record: Union[list, None] = None
 ):
     """
@@ -26,6 +26,7 @@ def train(
     :param optimizer: Optimizer used in training
     :param num_epochs: Number of epochs to train the model for
     :param batch_size: Number of images in a training batch
+    :param iter_per_batch: Number of training iterations per data batch
     :param lr_scheduler: If set, step this scheduler at the end of every epoch
     :param dtype: pytorch data type to use
     :param timing_log: Export record of execution time in the format of timing_log[epoch][batch_index] = (load_start, load_end, train_start, train_end)
@@ -78,7 +79,8 @@ def train(
                     data_preload_task = executor.submit(timed_load_batch)
 
                 train_start_time = time.time()
-                batch_loss = train_batch(x_var, y_var)
+                for _ in range(iter_per_batch):
+                    batch_loss = train_batch(x_var, y_var)
                 train_end_time = time.time()
 
                 epoch_loss.append(batch_loss)
