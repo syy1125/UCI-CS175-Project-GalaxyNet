@@ -35,19 +35,18 @@ def train(
     rng = np.random.default_rng()
     iter_per_epoch = training_data.shape[0] // batch_size
 
-    def load_batch():
+    def timed_load_batch():
+        start_time = time.time()
+
         batch_indices = rng.choice(training_data.shape[0], batch_size)
         batch_data = training_data[batch_indices]
         images = loader.load_images(
             batch_data[:, 0].astype(np.int),
             rng.integers(0, 360, batch_data.shape[0])
         )
+        x = Variable(torch.from_numpy(images).type(dtype))
+        y = Variable(torch.from_numpy(batch_data[:, 1:]).type(dtype))
 
-        return Variable(torch.from_numpy(images).type(dtype)), Variable(torch.from_numpy(batch_data[:, 1:]).type(dtype))
-
-    def timed_load_batch():
-        start_time = time.time()
-        x, y = load_batch()
         end_time = time.time()
         return x, y, start_time, end_time
 
@@ -70,13 +69,10 @@ def train(
 
             epoch_loss = []
             epoch_times = []
-            data_preload_task: Union[Future, None] = None
+            data_preload_task: Future = executor.submit(timed_load_batch)
 
             for i in range(iter_per_epoch):
-                if data_preload_task is not None:
-                    x_var, y_var, load_start_time, load_end_time = data_preload_task.result()
-                else:
-                    x_var, y_var, load_start_time, load_end_time = timed_load_batch()
+                x_var, y_var, load_start_time, load_end_time = data_preload_task.result()
 
                 if i < iter_per_epoch - 1:
                     data_preload_task = executor.submit(timed_load_batch)
