@@ -98,26 +98,34 @@ def train(
 
 
 def batch_predict_eval(
-        data: np.ndarray, loader: DataLoader, preprocess_fn: Callable[[np.ndarray], np.ndarray],
+        data: np.ndarray, loader: DataLoader,
         model: nn.Module, batch_size: int = 50, dtype=torch.FloatTensor,
         extract_predictions: Callable[[Variable], np.ndarray] = lambda scores: scores.data.numpy()
 ):
     model.eval()
 
-    predictions = np.zeros((data.shape[0], data.shape[1] - 1))
+    n = data.shape[0]
+    predictions = np.zeros((n, data.shape[1] - 1))
 
-    with torch.no_grad():
-        for i in range(0, data.shape[0], batch_size):
-            start_index = i
-            end_index = np.minimum(i + batch_size, data.shape[0])
+    def load_batch(start, end):
+        return loader.load_images(data[start:end, 0].astype(np.int))
 
-            data_batch = data[start_index:end_index]
-            images = loader.load_images(data_batch[:, 0].astype(np.int))
-            images = preprocess_fn(images)
+    with ThreadPoolExecutor() as executor:
+        with torch.no_grad():
+            data_preload_task: Future = executor.submit(load_batch, 0, np.minimum(batch_size, n))
 
-            x_var = Variable(torch.from_numpy(images).type(dtype))
+            for i in range(0, n, batch_size):
+                start_index = i
+                end_index = np.minimum(i + batch_size, n)
 
-            scores = model(x_var)
-            predictions[start_index:end_index] = extract_predictions(scores)
+                images = data_preload_task.result()
+
+                if i + batch_size < n:
+                    data_preload_task = executor.submit(load_batch, i + batch_size, np.minimum(i + 2 * batch_size, n))
+
+                x_var = Variable(torch.from_numpy(images).type(dtype))
+
+                scores = model(x_var)
+                predictions[start_index:end_index] = extract_predictions(scores)
 
     return predictions
