@@ -11,4 +11,4 @@ Colab:
 https://colab.research.google.com/drive/1xyYdugRT848frI2U6JgRtdkago8-9AuB
 
 Presentation page:
-https://docs.google.com/presentation/d/1iIBSgCywuXL60uZOj7rCL_nlZiodx7mq7QASHaGb728/edit#slide=id.p
+https://docs.google.com/presentation/d/18EUXTLH3nnbyMaPylhp6MyDgJzTOzy32qeVKRvqAJ5I/edit#slide=id.gb69105a9f1_0_15
