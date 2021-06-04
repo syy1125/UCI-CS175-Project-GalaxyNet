@@ -12,6 +12,14 @@ def color_index(data: np.ndarray):
     return (np.log(data[:, (2,)]) - np.log(data[:, (0,)])) / np.log(255)
 
 
+def grayscale_images(images: np.ndarray):
+    return np.mean(images, axis=1)
+
+
+def flatten_images(images: np.ndarray):
+    return images.reshape((images.shape[0], -1))
+
+
 def compose(*transforms):
     """
     Compose the transforms into a pipeline. The image enters on the *right*.
