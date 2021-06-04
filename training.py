@@ -43,7 +43,9 @@ def train(
         batch_data = training_data[batch_indices]
         images = loader.load_images(
             batch_data[:, 0].astype(np.int),
-            rng.integers(0, 360, batch_data.shape[0])
+            rotations=rng.integers(0, 360, batch_data.shape[0]),
+            translations=rng.integers(-4, 4, (batch_data.shape[0], 2), endpoint=True),
+            hflip=rng.choice([True, False], batch_data.shape[0])
         )
         x = Variable(torch.from_numpy(images).type(dtype))
         y = Variable(torch.from_numpy(batch_data[:, 1:]).type(dtype))
