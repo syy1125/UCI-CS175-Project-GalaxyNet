@@ -15,3 +15,8 @@ https://docs.google.com/presentation/d/18EUXTLH3nnbyMaPylhp6MyDgJzTOzy32qeVKRvqA
 
 Presentation video:
 https://drive.google.com/file/d/1STBxxrS34p4uchrpylKVAb77GvqSBUKy/view?usp=sharing
+
+Final Report freewrite:
+https://docs.google.com/document/d/1sxa5PYWSmDmg0gsOhZMDlVrQ93JvzwQ3v4AYMHZVZeY/edit
+
+
