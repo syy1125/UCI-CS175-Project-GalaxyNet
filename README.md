@@ -1,11 +1,11 @@
 # UCI-CS175-Project-GalaxyNet
 Contains support code written by our team members for our CS175 project.
 
-### 
-Final Report freewrite:
+### Final Report freewrite:
+
 https://docs.google.com/document/d/1sxa5PYWSmDmg0gsOhZMDlVrQ93JvzwQ3v4AYMHZVZeY/edit
 
-
+-----------------------------------------------------------------------------------------
 
 ###The Galaxy Challenge
 
