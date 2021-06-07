@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as func
 
 
 class GalaxyNetNormalizeOutput(nn.Module):
@@ -16,8 +17,8 @@ class GalaxyNetNormalizeOutput(nn.Module):
         self._normalize(x, 31, 37, [28, 29, 30])  # class 11
         self._normalize(x, 9, 13, [8, 31, 32, 33, 34, 35, 36])  # class 5
 
-        # class 6 is weird. It appears that it always sums to 1 no matter what the viewer answered for Q1,
-        # which is different from the flowchart.
+        # class 6 is weird. It appears that it always sums to 1 no matter what the viewer answered for Q1.
+        # This is different from the flowchart but it's producing the correct results.
         self._normalize(x, 13, 15)  # class 6
         self._normalize(x, 18, 25, [13])  # class 8
 
@@ -28,5 +29,12 @@ class GalaxyNetNormalizeOutput(nn.Module):
         non_zero = torch.where(class_sum[:, 0] > 0, True, False)
         x[non_zero, start:end] /= class_sum[non_zero]
 
+        if sum_index is not None:
+            x[:, start:end] *= torch.sum(x[:, sum_index], dim=1, keepdim=True)
+
+
+class GalaxyNetSoftmaxOutput(GalaxyNetNormalizeOutput):
+    def _normalize(self, x, start, end, sum_index=None):
+        x[:, start:end] = func.softmax(x[:, start:end], dim=1)
         if sum_index is not None:
             x[:, start:end] *= torch.sum(x[:, sum_index], dim=1, keepdim=True)
